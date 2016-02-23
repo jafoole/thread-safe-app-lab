@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,12 +31,20 @@ public class MainActivity extends AppCompatActivity{
     change = (Button) findViewById(R.id.choose_button);
     image = (ImageView) findViewById(R.id.image);
     setProfileImage();
+
     change.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         changeProfileImage();
       }
     });
+  }
+
+  private void setProfileImage() {
+    LoaderAsyncTask loadTask = new LoaderAsyncTask();
+    loadTask.execute();
+
+
   }
 
   // sets the chosen image as a profile picture
@@ -57,22 +67,16 @@ public class MainActivity extends AppCompatActivity{
       } catch (IOException e) {
         e.printStackTrace();
       }
-
       //provides a feedback that the image is set as a profile picture
-      Toast.makeText(this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+//      Toast.makeText(this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+      Toast.makeText(MainActivity.this, "Image has been saved to file", Toast.LENGTH_SHORT).show();
+
     }
   }
 
   //sets the image view of the profile picture to the previously saved image or the placeholder if
   // the image has never been modified
-  private void setProfileImage() {
-    Bitmap bm = PictureUtil.loadFromCacheFile();
-    if (bm != null) {
-      image.setImageBitmap(bm);
-    } else {
-      image.setImageResource(R.drawable.placeholder);
-    }
-  }
+
 
   // brings up the photo gallery/other resources to choose a picture
   private void changeProfileImage() {
@@ -80,5 +84,34 @@ public class MainActivity extends AppCompatActivity{
     intent.setType("image/*");
     intent.setAction(Intent.ACTION_GET_CONTENT);
     startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+  }
+
+  private class LoaderAsyncTask extends AsyncTask<Uri,Void,Bitmap>{
+
+    @Override
+    protected void onPreExecute() {
+      super.onPreExecute();
+    }
+
+    @Override
+    protected Bitmap doInBackground(Uri... params) {
+      Bitmap bm = PictureUtil.loadFromCacheFile();
+      return bm;
+    }
+
+    @Override
+    protected void onPostExecute(Bitmap bm) {
+      super.onPostExecute(bm);
+      if (bm != null) {
+        image.setImageBitmap(bm);
+      } else {
+        image.setImageResource(R.drawable.placeholder);
+      }
+    }
+
+    @Override
+    protected void onProgressUpdate(Void... values) {
+      super.onProgressUpdate(values);
+    }
   }
 }
